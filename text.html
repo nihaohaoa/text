@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>手机便捷工具</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.5;
+            padding: 20px;
+            min-height: 100vh;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+        
+        .floating-widget {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+        
+        .main-button {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 24px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            user-select: none;
+        }
+        
+        .main-button:active {
+            transform: scale(0.95);
+        }
+        
+        .widget-panel {
+            position: absolute;
+            bottom: 70px;
+            right: 0;
+            width: 280px;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            padding: 15px;
+            display: none;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .widget-panel.active {
+            display: flex;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .widget-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .widget-item:hover {
+            background: #f5f5f5;
+        }
+        
+        .widget-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: #f0f0f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-right: 15px;
+            font-size: 18px;
+            color: #6a11cb;
+        }
+        
+        .widget-text {
+            flex: 1;
+            font-size: 16px;
+        }
+        
+        .mini-dialer {
+            position: fixed;
+            bottom: 90px;
+            left: 20px;
+            width: 200px;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            padding: 15px;
+            display: none;
+            flex-direction: column;
+            z-index: 999;
+        }
+        
+        .mini-dialer.active {
+            display: flex;
+        }
+        
+        .dialer-input {
+            font-size: 18px;
+            padding: 10px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        
+        .dialer-keypad {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+        
+        .dialer-key {
+            aspect-ratio: 1;
+            border-radius: 50%;
+            background: #f5f5f5;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-size: 18px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .dialer-key:active {
+            background: #e0e0e0;
+        }
+        
+        .key-sub {
+            font-size: 10px;
+            color: #666;
+            margin-top: 2px;
+        }
+        
+        .dialer-actions {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+        }
+        
+        .dialer-action {
+            flex: 1;
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+        }
+        
+        .dialer-call {
+            background: #4CD964;
+            color: white;
+            margin-left: 5px;
+        }
+        
+        .dialer-close {
+            background: #f5f5f5;
+            margin-right: 5px;
+        }
+        
+        .quick-note {
+            position: fixed;
+            top: 100px;
+            right: 20px;
+            width: 250px;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            padding: 15px;
+            display: none;
+            flex-direction: column;
+            z-index: 999;
+        }
+        
+        .quick-note.active {
+            display: flex;
+        }
+        
+        .note-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        
+        .note-title {
+            font-weight: 600;
+            font-size: 16px;
+        }
+        
+        .note-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .note-action {
+            color: #007AFF;
+            cursor: pointer;
+        }
+        
+        .note-content {
+            min-height: 120px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 10px;
+            font-size: 14px;
+            resize: none;
+            margin-bottom: 10px;
+        }
+        
+        .calculator {
+            position: fixed;
+            top: 100px;
+            left: 20px;
+            width: 250px;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            padding: 15px;
+            display: none;
+            flex-direction: column;
+            z-index: 999;
+        }
+        
+        .calculator.active {
+            display: flex;
+        }
+        
+        .calc-display {
+            font-size: 24px;
+            padding: 10px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            text-align: right;
+            background: #f9f9f9;
+            min-height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+        }
+        
+        .calc-keypad {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+        }
+        
+        .calc-key {
+            aspect-ratio: 1;
+            border-radius: 8px;
+            background: #f5f5f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 18px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .calc-key:active {
+            background: #e0e0e0;
+        }
+        
+        .calc-key.operator {
+            background: #f0f0f0;
+            color: #007AFF;
+        }
+        
+        .calc-key.equals {
+            background: #007AFF;
+            color: white;
+        }
+        
+        .flashlight-toggle {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 24px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+        
+        .flashlight-toggle.active {
+            background: #FFD700;
+            color: #333;
+        }
+        
+        .demo-content {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #333;
+        }
+        
+        p {
+            margin-bottom: 15px;
+            line-height: 1.6;
+        }
+        
+        ol {
+            margin-left: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .install-steps {
+            background: #f9f9f9;
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        
+        /* 图标样式 */
+        .icon-phone:before { content: "📞"; }
+        .icon-calc:before { content: "🧮"; }
+        .icon-note:before { content: "📝"; }
+        .icon-music:before { content: "🎵"; }
+        .icon-map:before { content: "🗺️"; }
+        .icon-plus:before { content: "＋"; }
+        .icon-bulb:before { content: "💡"; }
+    </style>
+</head>
+<body>
+    <div class="demo-content">
+        <h1>手机便捷操作组件</h1>
+        <p>这是一个完全功能的手机便捷工具组件，包含拨号、计算器、便签等功能。</p>
+        
+        <div class="install-steps">
+            <h2>使用说明：</h2>
+            <ol>
+                <li>点击右下角悬浮按钮展开工具面板</li>
+                <li>选择需要的功能组件</li>
+                <li>所有组件都可以拖动到屏幕任意位置</li>
+                <li>点击组件外部区域可关闭</li>
+            </ol>
+        </div>
+        
+        <p>这些组件设计为轻量级、随时可用的工具，不需要进入特定应用即可使用。</p>
+    </div>
+
+    <!-- 主悬浮按钮 -->
+    <div class="floating-widget">
+        <div class="main-button" id="mainButton">
+            <span class="icon-plus"></span>
+        </div>
+        <div class="widget-panel" id="widgetPanel">
+            <div class="widget-item" id="dialerWidget">
+                <div class="widget-icon">
+                    <span class="icon-phone"></span>
+                </div>
+                <div class="widget-text">快速拨号</div>
+            </div>
+            <div class="widget-item" id="calculatorWidget">
+                <div class="widget-icon">
+                    <span class="icon-calc"></span>
+                </div>
+                <div class="widget-text">计算器</div>
+            </div>
+            <div class="widget-item" id="noteWidget">
+                <div class="widget-icon">
+                    <span class="icon-note"></span>
+                </div>
+                <div class="widget-text">便签</div>
+            </div>
+            <div class="widget-item">
+                <div class="widget-icon">
+                    <span class="icon-music"></span>
+                </div>
+                <div class="widget-text">音乐控制</div>
+            </div>
+            <div class="widget-item">
+                <div class="widget-icon">
+                    <span class="icon-map"></span>
+                </div>
+                <div class="widget-text">导航</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 快速拨号组件 -->
+    <div class="mini-dialer" id="miniDialer">
+        <input type="text" class="dialer-input" placeholder="输入号码" readonly>
+        <div class="dialer-keypad">
+            <div class="dialer-key" data-key="1">1</div>
+            <div class="dialer-key" data-key="2">2<div class="key-sub">ABC</div></div>
+            <div class="dialer-key" data-key="3">3<div class="key-sub">DEF</div></div>
+            <div class="dialer-key" data-key="4">4<div class="key-sub">GHI</div></div>
+            <div class="dialer-key" data-key="5">5<div class="key-sub">JKL</div></div>
+            <div class="dialer-key" data-key="6">6<div class="key-sub">MNO</div></div>
+            <div class="dialer-key" data-key="7">7<div class="key-sub">PQRS</div></div>
+            <div class="dialer-key" data-key="8">8<div class="key-sub">TUV</div></div>
+            <div class="dialer-key" data-key="9">9<div class="key-sub">WXYZ</div></div>
+            <div class="dialer-key" data-key="*">*</div>
+            <div class="dialer-key" data-key="0">0</div>
+            <div class="dialer-key" data-key="#">#</div>
+        </div>
+        <div class="dialer-actions">
+            <div class="dialer-action dialer-close" id="dialerClose">取消</div>
+            <div class="dialer-action dialer-call" id="dialerCall">拨打</div>
+        </div>
+    </div>
+
+    <!-- 快速便签组件 -->
+    <div class="quick-note" id="quickNote">
+        <div class="note-header">
+            <div class="note-title">快速便签</div>
+            <div class="note-actions">
+                <div class="note-action" id="noteSave">保存</div>
+                <div class="note-action" id="noteClose">关闭</div>
+            </div>
+        </div>
+        <textarea class="note-content" placeholder="输入您的便签内容..."></textarea>
+    </div>
+
+    <!-- 计算器组件 -->
+    <div class="calculator" id="calculator">
+        <div class="calc-display">0</div>
+        <div class="calc-keypad">
+            <div class="calc-key">C</div>
+            <div class="calc-key">±</div>
+            <div class="calc-key">%</div>
+            <div class="calc-key operator">÷</div>
+            <div class="calc-key">7</div>
+            <div class="calc-key">8</div>
+            <div class="calc-key">9</div>
+            <div class="calc-key operator">×</div>
+            <div class="calc-key">4</div>
+            <div class="calc-key">5</div>
+            <div class="calc-key">6</div>
+            <div class="calc-key operator">-</div>
+            <div class="calc-key">1</div>
+            <div class="calc-key">2</div>
+            <div class="calc-key">3</div>
+            <div class="calc-key operator">+</div>
+            <div class="calc-key">0</div>
+            <div class="calc-key">.</div>
+            <div class="calc-key equals">=</div>
+        </div>
+    </div>
+
+    <!-- 手电筒开关 -->
+    <div class="flashlight-toggle" id="flashlightToggle">
+        <span class="icon-bulb"></span>
+    </div>
+
+    <script>
+        // 主悬浮按钮功能
+        const mainButton = document.getElementById('mainButton');
+        const widgetPanel = document.getElementById('widgetPanel');
+        
+        mainButton.addEventListener('click', function() {
+            widgetPanel.classList.toggle('active');
+        });
+        
+        // 点击页面其他区域关闭面板
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.floating-widget')) {
+                widgetPanel.classList.remove('active');
+            }
+        });
+        
+        // 快速拨号功能
+        const dialerWidget = document.getElementById('dialerWidget');
+        const miniDialer = document.getElementById('miniDialer');
+        const dialerInput = document.querySelector('.dialer-input');
+        const dialerKeys = document.querySelectorAll('.dialer-key');
+        const dialerClose = document.getElementById('dialerClose');
+        const dialerCall = document.getElementById('dialerCall');
+        
+        dialerWidget.addEventListener('click', function() {
+            widgetPanel.classList.remove('active');
+            miniDialer.classList.add('active');
+        });
+        
+        dialerKeys.forEach(key => {
+            key.addEventListener('click', function() {
+                const keyValue = this.getAttribute('data-key');
+                dialerInput.value += keyValue;
+            });
+        });
+        
+        dialerClose.addEventListener('click', function() {
+            miniDialer.classList.remove('active');
+            dialerInput.value = '';
+        });
+        
+        dialerCall.addEventListener('click', function() {
+            const phoneNumber = dialerInput.value;
+            if (phoneNumber) {
+                alert(`正在呼叫: ${phoneNumber}`);
+                // 在实际应用中，这里会调用电话功能
+                // window.location.href = `tel:${phoneNumber}`;
+            }
+        });
+        
+        // 便签功能
+        const noteWidget = document.getElementById('noteWidget');
+        const quickNote = document.getElementById('quickNote');
+        const noteSave = document.getElementById('noteSave');
+        const noteClose = document.getElementById('noteClose');
+        const noteContent = document.querySelector('.note-content');
+        
+        noteWidget.addEventListener('click', function() {
+            widgetPanel.classList.remove('active');
+            quickNote.classList.add('active');
+        });
+        
+        noteSave.addEventListener('click', function() {
+            if(noteContent.value.trim()) {
+                alert('便签已保存！');
+                quickNote.classList.remove('active');
+            } else {
+                alert('请输入内容');
+            }
+        });
+        
+        noteClose.addEventListener('click', function() {
+            quickNote.classList.remove('active');
+        });
+        
+        // 计算器功能
+        const calculatorWidget = document.getElementById('calculatorWidget');
+        const calculator = document.getElementById('calculator');
+        const calcDisplay = document.querySelector('.calc-display');
+        const calcKeys = document.querySelectorAll('.calc-key');
+        
+        calculatorWidget.addEventListener('click', function() {
+            widgetPanel.classList.remove('active');
+            calculator.classList.add('active');
+        });
+        
+        let calcValue = '0';
+        let waitingForSecondOperand = false;
+        let operator = null;
+        let previousValue = '';
+        
+        calcKeys.forEach(key => {
+            key.addEventListener('click', function() {
+                const keyText = this.textContent;
+                
+                if (keyText === 'C') {
+                    // 清除
+                    calcValue = '0';
+                    waitingForSecondOperand = false;
+                    operator = null;
+                    previousValue = '';
+                } else if (keyText === '±') {
+                    // 正负号
+                    calcValue = (parseFloat(calcValue) * -1).toString();
+                } else if (keyText === '%') {
+                    // 百分比
+                    calcValue = (parseFloat(calcValue) / 100).toString();
+                } else if (['+', '-', '×', '÷'].includes(keyText)) {
+                    // 运算符
+                    if (operator && waitingForSecondOperand) {
+                        operator = keyText;
+                        return;
+                    }
+                    
+                    if (previousValue === '') {
+                        previousValue = calcValue;
+                    } else if (operator) {
+                        const result = calculate(previousValue, calcValue, operator);
+                        calcValue = String(result);
+                        previousValue = calcValue;
+                    }
+                    
+                    operator = keyText;
+                    waitingForSecondOperand = true;
+                } else if (keyText === '=') {
+                    // 等于
+                    if (previousValue !== '' && operator) {
+                        calcValue = calculate(previousValue, calcValue, operator);
+                        previousValue = '';
+                        operator = null;
+                        waitingForSecondOperand = false;
+                    }
+                } else {
+                    // 数字或小数点
+                    if (waitingForSecondOperand) {
+                        calcValue = keyText;
+                        waitingForSecondOperand = false;
+                    } else {
+                        calcValue = calcValue === '0' ? keyText : calcValue + keyText;
+                    }
+                }
+                
+                calcDisplay.textContent = calcValue;
+            });
+        });
+        
+        function calculate(first, second, operator) {
+            const a = parseFloat(first);
+            const b = parseFloat(second);
+            
+            switch (operator) {
+                case '+': return a + b;
+                case '-': return a - b;
+                case '×': return a * b;
+                case '÷': return a / b;
+                default: return b;
+            }
+        }
+        
+        // 手电筒功能
+        const flashlightToggle = document.getElementById('flashlightToggle');
+        
+        flashlightToggle.addEventListener('click', function() {
+            this.classList.toggle('active');
+            if (this.classList.contains('active')) {
+                document.body.style.backgroundColor = '#333';
+                document.body.style.color = 'white';
+                alert('手电筒已打开');
+            } else {
+                document.body.style.backgroundColor = '#f5f5f5';
+                document.body.style.color = '#333';
+                alert('手电筒已关闭');
+            }
+        });
+        
+        // 使组件可拖动
+        function makeDraggable(element) {
+            let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+            
+            element.onmousedown = dragMouseDown;
+            element.ontouchstart = dragTouchStart;
+            
+            function dragMouseDown(e) {
+                e = e || window.event;
+                e.preventDefault();
+                pos3 = e.clientX;
+                pos4 = e.clientY;
+                document.onmouseup = closeDragElement;
+                document.onmousemove = elementDrag;
+            }
+            
+            function dragTouchStart(e) {
+                e.preventDefault();
+                const touch = e.touches[0];
+                pos3 = touch.clientX;
+                pos4 = touch.clientY;
+                document.ontouchend = closeDragElement;
+                document.ontouchmove = elementDragTouch;
+            }
+            
+            function elementDrag(e) {
+                e = e || window.event;
+                e.preventDefault();
+                pos1 = pos3 - e.clientX;
+                pos2 = pos4 - e.clientY;
+                pos3 = e.clientX;
+                pos4 = e.clientY;
+                element.style.top = (element.offsetTop - pos2) + "px";
+                element.style.left = (element.offsetLeft - pos1) + "px";
+            }
+            
+            function elementDragTouch(e) {
+                e.preventDefault();
+                const touch = e.touches[0];
+                pos1 = pos3 - touch.clientX;
+                pos2 = pos4 - touch.clientY;
+                pos3 = touch.clientX;
+                pos4 = touch.clientY;
+                element.style.top = (element.offsetTop - pos2) + "px";
+                element.style.left = (element.offsetLeft - pos1) + "px";
+            }
+            
+            function closeDragElement() {
+                document.onmouseup = null;
+                document.onmousemove = null;
+                document.ontouchend = null;
+                document.ontouchmove = null;
+            }
+        }
+        
+        // 使所有组件可拖动
+        makeDraggable(document.querySelector('.floating-widget'));
+        makeDraggable(document.querySelector('.mini-dialer'));
+        makeDraggable(document.querySelector('.quick-note'));
+        makeDraggable(document.querySelector('.calculator'));
+        makeDraggable(document.querySelector('.flashlight-toggle'));
+    </script>
+</body>
+</html>
